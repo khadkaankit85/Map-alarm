@@ -23,15 +23,14 @@ app.get("/", (req, res) => {
 app.post("/get-my-destination", (req, res) => {
     const body = req.body
     const userRequestedLocation = body?.userQuery
-    console.log(userRequestedLocation)
+    // console.log(userRequestedLocation)
 
     // this is the place where i am gonna do that reverse location thing
 
     async function forwardGeocoding() {
         const destURL = `https://us1.locationiq.com/v1/search?key=${process.env.LOCATION_API_KEY}&q=${encodeURIComponent(userRequestedLocation)}&format=json&`
         const response = await axios.get(destURL)
-        console.log(response)
-        res.status(201).send(response)
+        return res.status(201).send(response?.data)
 
     }
     forwardGeocoding()

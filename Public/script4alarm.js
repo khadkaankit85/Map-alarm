@@ -1,18 +1,26 @@
 //  logic to set the scene for the first time:)
 
 
+let shownProvideLocationAlert, map
+
 function setFirstScene() {
-    let shownProvideLocationAlert
 
     function displayFirstMap() {
-        navigator.geolocation.getCurrentPosition(gotLocation, deniedLocationPermission)
+        navigator.geolocation.getCurrentPosition(gotLocation, deniedLocationPermission, {
+            enableHighAccuracy: true,
+            timeout: 10000
+        })
     }
 
     function gotLocation(locationData) {
         const myLatitue = locationData.coords.latitude
         const myLongitude = locationData.coords.longitude
         const accuracy = locationData.coords.accuracy
-        const map = L.map('map').setView([myLatitue, myLongitude], 17);
+        console.log("the accuracy is ", accuracy)
+
+        console.log(myLatitue, myLongitude)
+
+        map = L.map('map').setView([myLatitue, myLongitude], 17);
 
         function addMarkerAtMyLocation() {
 
@@ -21,7 +29,8 @@ function setFirstScene() {
                 fillColor: 'blue',
                 fillOpacity: 0.5,
                 radius: 10
-            }).addTo(map);
+            }).addTo(map).bindPopup('You are here!')
+                .openPopup();
 
             // console.log(circle)
             circle._path.classList.add("beeping_circle")
@@ -67,7 +76,19 @@ function searchLocation() {
             body: JSON.stringify({ userQuery: searchInput })
         })
         const data = await response.json()
-        console.log(data)
+        const finedData = data[0]
+        const marker = L.marker([finedData.lat, finedData.lon]).addTo(map);
+
+        console.log("marker added at ", finedData.lat, finedData.lon)
+        // display_name
+        // lat
+        // lon
+        // type
+        // :
+        // "house"
+
+
+        // console.log(data[0])
     }
     fetchDestination()
 
