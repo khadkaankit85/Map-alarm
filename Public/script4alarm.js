@@ -1,4 +1,5 @@
 //  logic to set the scene for the first time:)
+const myLocation = document.getElementById("my-location")
 
 
 let shownProvideLocationAlert, map
@@ -22,21 +23,17 @@ function setFirstScene() {
 
         map = L.map('map').setView([myLatitue, myLongitude], 17);
 
-        function addMarkerAtMyLocation() {
 
-            var circle = L.circle([myLatitue, myLongitude], {
-                color: 'blue',
-                fillColor: 'blue',
-                fillOpacity: 0.5,
-                radius: 10
-            }).addTo(map).bindPopup('You are here!')
-                .openPopup();
+        var circle = L.circle([myLatitue, myLongitude], {
+            color: 'blue',
+            fillColor: 'blue',
+            fillOpacity: 0.5,
+            radius: 10
+        }).addTo(map).bindPopup('You are here!')
+            .openPopup();
 
-            // console.log(circle)
-            circle._path.classList.add("beeping_circle")
-        }
-
-        addMarkerAtMyLocation()
+        // console.log(circle)
+        circle._path.classList.add("beeping_circle")
 
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {

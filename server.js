@@ -31,8 +31,8 @@ app.post("/get-my-destination", (req, res) => {
         const destURL = `https://us1.locationiq.com/v1/search?key=${process.env.LOCATION_API_KEY}&q=${encodeURIComponent(userRequestedLocation)}&format=json&`
         const response = await axios.get(destURL)
         return res.status(201).send(response?.data)
-
     }
+
     forwardGeocoding()
 
 
