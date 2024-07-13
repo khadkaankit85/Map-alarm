@@ -3,7 +3,7 @@ const myLocationInformation = document.getElementById("my-location")
 const myDestinationInformation = document.getElementById("your-destination")
 
 // universal vars
-let shownProvideLocationAlert, map, myLocationArray, locationOfUser
+let shownProvideLocationAlert, map, myLocationArray, locationOfUser, watchId
 let circlesInTheMap = []
 
 // Create popup container
@@ -38,9 +38,18 @@ closeButton.addEventListener("click", () => {
 
 function deleteAllSpecificMarker(markerType) {
     map.removeLayer(markerType)
-
 }
 
+// To get the saved alarms
+const savedAlarmsString = localStorage.getItem("savedAlarms");
+if (savedAlarmsString) {
+    const savedAlarms = JSON.parse(savedAlarmsString);
+    savedAlarms.map((savedAlarms) => {
+        console.log(savedAlarms)
+        addAlarm(savedAlarms?.lat, savedAlarms?.lon)
+        console.log("alarm set for ", savedAlarms?.display_name)
+    })
+}
 
 // Find address handler
 document.getElementById("find-address").addEventListener("click", () => {
@@ -131,6 +140,7 @@ function setFirstScene() {
             changeLocationButton.classList.add("change-location-btn")
             myLocationInformation.append(changeLocationButton)
 
+
             // event listener to let users change their location
             changeLocationButton.addEventListener("click", () => {
 
@@ -149,7 +159,7 @@ function setFirstScene() {
             color: 'blue',
             fillOpacity: 0.5,
             radius: 12,
-        }).addTo(map).bindPopup('You are here!')
+        }).addTo(map).bindPopup('<p style="color:black">You are here!</p>')
             .openPopup();
         circlesInTheMap.push(circle)
         console.log("circle in the map are", circlesInTheMap)
@@ -157,10 +167,15 @@ function setFirstScene() {
 
         // Add class to the circle's path element
         circle._path.classList.add("beeping_circle");
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            className: 'map-tiles'
         }).addTo(map);
+
+
+
+
+
 
     }
     function deniedLocationPermission(error) {
@@ -197,7 +212,8 @@ function searchLocation() {
         const finedData = data[0]
         const marker = L.marker([finedData.lat, finedData.lon])
             .addTo(map)
-            .bindPopup(`${finedData?.display_name || searchInput}`)
+            .bindPopup(`<p style="color:black">${finedData?.display_name || searchInput} <div class="setAlarmButton">set an alarm</div></p>
+                `)
             .openPopup();;
 
         //after fetching that location, change the view of the map
@@ -205,7 +221,7 @@ function searchLocation() {
 
         myDestinationInformation.innerHTML =
             `<p ">Your Destination is ${finedData?.display_name}
-         would you like to <span class="setAlarmButton">set an alarm</span> for this location 
+         .Would you like to <span class="setAlarmButton">set an alarm</span> for this location 
         </p>
         `
         let btns = document.getElementsByClassName("setAlarmButton")
@@ -213,7 +229,26 @@ function searchLocation() {
         for (const btn of btns) {
             btn.addEventListener("click", () => {
                 console.log("set an alarm for coords ", finedData?.lat, finedData?.lon)
-                addAlarm(finedData?.lat, finedData?.lon)
+
+                // To save the alarms
+                if (!savedAlarmsString) {
+                    localStorage.setItem("savedAlarms", JSON.stringify([{
+                        display_name: finedData?.display_name,
+                        lat: finedData?.lat,
+                        lon: finedData?.lon
+                    }]));
+                    addAlarm(finedData?.lat, finedData?.lon)
+                    alert("set alarms from localstorage")
+                }
+                else {
+                    let prev = JSON.parse(localStorage.getItem("savedAlarms"))
+                    prev.push({
+                        display_name: finedData?.display_name,
+                        lat: finedData?.lat,
+                        lon: finedData?.lon
+                    })
+                    localStorage.setItem("savedAlarms", JSON.stringify(prev))
+                }
             })
         }
 
@@ -222,62 +257,84 @@ function searchLocation() {
 
     }
     fetchCoordsFromLocation()
-
-
 }
 
-// Add event listener to search button
 document.getElementById('search-button').addEventListener('click', searchLocation);
 
-// Function to add alarm (you'll need to implement this)
-
-
-// Haversine formula to calculate the distance between two geographic points
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Radius of the Earth in meters
-    const φ1 = lat1 * Math.PI / 180;
-    const φ2 = lat2 * Math.PI / 180;
-    const Δφ = (lat2 - lat1) * Math.PI / 180;
-    const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-        Math.cos(φ1) * Math.cos(φ2) *
-        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c; // Distance in meters
-}
-
-let watchId;
-
 function addAlarm(lat, lon) {
-    const destination = { lat, lon };
-    alert(`Adding alarm for location: ${lat}, ${lon}`);
-
-    if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
+    // Check if the geolocation API is available
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser.");
+        return;
     }
 
-    watchId = navigator.geolocation.watchPosition(
-        (position) => {
-            const { latitude, longitude } = position.coords;
-            const distance = getDistance(latitude, longitude, destination.lat, destination.lon);
+    // Function to calculate the distance between two coordinates in meters
+    function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // Radius of the Earth in meters
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Distance in meters
+        return distance;
+    }
 
-            console.log(`Current distance to destination: ${distance} meters`);
+    // Define the success callback function
+    function success(position) {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
 
-            if (distance <= 300) {
-                document.getElementById('alarmSound').play();
-                document.getElementById('alarmSound').style.display = "block"
-                alert("You have arrived at your destination")
-            }
-        },
-        (error) => {
-            console.error('Error getting location', error);
-        },
-        {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 10000
+        // Calculate the distance between the user's current location and the target location
+        const distance = getDistanceFromLatLonInMeters(userLat, userLon, lat, lon);
+
+        // Check if the distance is within the threshold (200-300 meters)
+        if (distance <= 500) {
+            // Play the alarm sound
+            const alarmSound = document.getElementById('alarmSound');
+            alarmSound.play();
+
+            // Make the audio element visible
+            document.getElementById('audio-container').style.display = "block";
+
+            // Stop watching the location
+            navigator.geolocation.clearWatch(watchId);
         }
-    );
+    }
+
+    // Define the error callback function
+    function error(err) {
+        console.error(`ERROR(${err.code}): ${err.message}`);
+    }
+
+    // Define the options for the geolocation API
+    const options = {
+        enableHighAccuracy: true,
+        timeout: 10000, // 10 seconds
+        maximumAge: 0 // No caching of the position
+    };
+
+    // Optional: Add throttling to limit the number of location checks
+    let lastCheckTime = 0;
+    const checkInterval = 10000; // 10 seconds
+
+    function throttledSuccess(position) {
+        const currentTime = new Date().getTime();
+        if (currentTime - lastCheckTime >= checkInterval) {
+            success(position);
+            lastCheckTime = currentTime;
+        }
+    }
+
+    // Watch the user's location with throttling
+    const watchId = navigator.geolocation.watchPosition(throttledSuccess, error, options);
+
+    // Return a function to stop watching the location
+    return function stopWatchingLocation() {
+        navigator.geolocation.clearWatch(watchId);
+    };
 }
+
+// part to showcase saved alarms

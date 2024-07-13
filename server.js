@@ -39,7 +39,6 @@ app.post("/get-coords-data", (req, res) => {
 app.post("/get-location", (req, res) => {
     const body = req.body
     const userRequestedCoords = [body?.latitude, body?.longitude]
-    console.log(userRequestedCoords)
 
     async function reverseGeocoding() {
         const destURL = `https://us1.locationiq.com/v1/reverse?key=${process.env.LOCATION_API_KEY}&lat=${userRequestedCoords[0]}&lon=${userRequestedCoords[1]}&format=json&`

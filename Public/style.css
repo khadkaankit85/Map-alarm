@@ -1,5 +1,9 @@
 * {
-    color: red;
+    color: #E6E6E6;
+}
+
+body {
+    background-color: #0A1128;
 }
 
 #map {
@@ -27,15 +31,14 @@
     width: 30%;
     padding: 10px;
     font-size: 16px;
-    background-color: #4CAF50;
+    background-color: blue;
     color: white;
-    border: 1px solid #4CAF50;
     border-radius: 0 4px 4px 0;
     cursor: pointer;
 }
 
 #search-button:hover {
-    background-color: #45a049;
+    background-color: #6A0DAD;
 }
 
 @keyframes beep {
@@ -67,17 +70,19 @@
 }
 
 .change-location-btn {
-    outline: none;
-    border: none;
-    background: none;
     font-weight: 700;
-    font-size: medium;
     cursor: pointer;
+    color: #45a049;
 }
 
 .my-location {
     padding: 3px;
+    color: black;
 
+}
+
+#my-location {
+    margin-right: 3px;
 }
 
 .change-location-popup {
@@ -146,16 +151,19 @@ form button:hover {
     cursor: pointer;
 }
 
-.audio-container {
+#audio-container {
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: 20px;
+    display: none;
 }
 
-.audio-container audio {
+#audio-container audio {
     width: 300px;
     height: 40px;
     border: 2px solid black;
     border-radius: 5px;
 }
+
+</p>
