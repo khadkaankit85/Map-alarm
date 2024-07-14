@@ -1,7 +1,0 @@
-{
-    "watch": [
-        "*"
-    ],
-    "ext": "js,html,css,json",
-    "exec": "node server.js"
-}
