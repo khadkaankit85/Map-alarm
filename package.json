@@ -7,9 +7,6 @@
     "express": "^4.19.2",
     "path": "^0.12.7"
   },
-  "scripts": {
-    "start": "nodemon & browser-sync start --config bs-config.js"
-  },
   "devDependencies": {
     "browser-sync": "^3.0.2"
   }
